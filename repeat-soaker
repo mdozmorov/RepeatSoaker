@@ -1,61 +1,55 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
 
-# Requirements:
-# - bowtie2
+import argparse
+from itertools import groupby
+from operator import attrgetter
 
-usage() {
-    cat <<EOF 1>&2
-USAGE: 
-    $0 -g hg19 in.fq
-    $0 -g hg19 in.bam
-    cat in.fq | $0 -g hg19 
+from BioTK.io import BEDFile
+from BioTK.genome import RAMIndex
+import pysam
 
-Required -- one of:
-    -f path/to/repeats.fa : 
-        A file containing repeats, in FASTA format
-    -g [name] : The genome name (from UCSC)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repeat-regions", "-r",
+            help="A BED file with repetitive regions to be masked.")
+    parser.add_argument("--genome", "-g",
+            help="A UCSC genome name (e.g., 'hg19')")
+    parser.add_argument("bam_file", nargs=1)
 
-Optional:
-    -d [path] : Directory for RepeatSoaker to store downloaded data 
-        (default: "./data/RepeatSoaker")
-    -h : Show this help
-EOF
-}
+    args = parser.parse_args()
 
-datadir=data/RepeatSoaker
-genome=
-repeats=
+    index = RAMIndex()
 
-while getopts "g:d:f:h" opt; do
-    case $opt in
-        g) genome="$OPTARG"
-        ;;
-        d) datadir="$OPTARG"
-        ;;
-        f) repeats="$OPTARG"
-        ;;
-        h) usage && exit 0
-        ;;
-        *) usage && exit 1 
-        ;;
-    esac
-done
+    from itertools import islice
 
-shift $((OPTIND - 1))
+    with pysam.Samfile(args.bam_file[0], "rb") as bam:
+        contigs = dict([(bam.getrname(i), i) 
+            for i in range(bam.nreferences)])
 
-mkdir -p "${datadir}"
+        with BEDFile(args.repeat_regions) as h:
+            for region in islice(h, 0, 100):
+                contig_id = contigs.get(region.contig)
+                if contig_id is not None:
+                    index.add(contig_id, region.start, region.end)
+        index.build()
 
-seqhash=$(zcat -f $repeats | md5sum | cut -d" " -f1)
+        for name, alns in groupby(bam, attrgetter("qname")):
+            for aln in alns:
+                matches = index.search(aln.tid, aln.pos, aln.aend)
+                if matches:
+                    print(matches)
+                    # TODO: take cumulative overlap instead of max
+                    n_overlap = max([aln.overlap(s,e) for (s,e,_) in matches])
+                    pct_overlap = n_overlap / (aln.aend - aln.pos)
+                    print(n_overlap, pct_overlap)
 
-if [ ! -f "$datadir/${seqhash}.1.bt2" ]; then
-    echo "Building index for repeat FASTA: $repeats" 1>&2
-    fa=$(mktemp)
-    zcat -f $repeats > $fa
-    bowtie2-build $fa $datadir/$seqhash
-    rm -f $fa
-else
-    echo "Index already exists for FASTA: $repeats" 1>&2
-fi
-
-#RMSK="http://hgdownload.soe.ucsc.edu/goldenPath/${GENOME}/database/rmsk.txt.gz"
-#INDEX="${DATA_DIR}/RepeatSoaker_${GENOME}"
+        """
+        for tid, alns in itertools.groupby(attrgetter("tid"), bam):
+            for (start, end), alns in itertools.groupby(
+                    lambda aln: (aln.pos, aln.aend), alns):
+        """
+            #print(aln.positions)
+            #print(aln.rname)
+            #print(aln.pnext)
+            #print(dir(aln))
+            #break
