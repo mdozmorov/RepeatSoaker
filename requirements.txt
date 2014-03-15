@@ -1,0 +1,2 @@
+pysam
+BioTK==0.0.1
