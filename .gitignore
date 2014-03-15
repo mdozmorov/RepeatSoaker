@@ -1,4 +1,6 @@
 *.py[cod]
+/data
+*.bam
 
 # C extensions
 *.so
