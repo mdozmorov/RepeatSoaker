@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Requirements:
+# - bowtie2
+
+usage() {
+    cat <<EOF 1>&2
+USAGE: 
+    $0 -g hg19 in.fq
+    $0 -g hg19 in.bam
+    cat in.fq | $0 -g hg19 
+
+Required -- one of:
+    -f path/to/repeats.fa : 
+        A file containing repeats, in FASTA format
+    -g [name] : The genome name (from UCSC)
+
+Optional:
+    -d [path] : Directory for RepeatSoaker to store downloaded data 
+        (default: "./data/RepeatSoaker")
+    -h : Show this help
+EOF
+}
+
+datadir=data/RepeatSoaker
+genome=
+repeats=
+
+while getopts "g:d:f:h" opt; do
+    case $opt in
+        g) genome="$OPTARG"
+        ;;
+        d) datadir="$OPTARG"
+        ;;
+        f) repeats="$OPTARG"
+        ;;
+        h) usage && exit 0
+        ;;
+        *) usage && exit 1 
+        ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+mkdir -p "${datadir}"
+
+seqhash=$(zcat -f $repeats | md5sum | cut -d" " -f1)
+
+if [ ! -f "$datadir/${seqhash}.1.bt2" ]; then
+    echo "Building index for repeat FASTA: $repeats" 1>&2
+    fa=$(mktemp)
+    zcat -f $repeats > $fa
+    bowtie2-build $fa $datadir/$seqhash
+    rm -f $fa
+else
+    echo "Index already exists for FASTA: $repeats" 1>&2
+fi
+
+#RMSK="http://hgdownload.soe.ucsc.edu/goldenPath/${GENOME}/database/rmsk.txt.gz"
+#INDEX="${DATA_DIR}/RepeatSoaker_${GENOME}"
