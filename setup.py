@@ -13,5 +13,8 @@ setup(
         "Topic :: Scientific/Engineering :: Bio-Informatics"
     ],
     license="AGPLv3+",
-    scripts="repeat-soaker"
+    entry_points={
+        "console_scripts":
+        ["repeat-soaker = RepeatSoaker:main"]
+    }
 )
