@@ -33,8 +33,6 @@ def main(args):
 
     index = RAMIndex()
 
-    from itertools import islice
-
     out_mode = "w"  if args.output_sam else "wb"
 
     with pysam.Samfile(args.bam_file[0], "rb") as bam, \
@@ -43,8 +41,7 @@ def main(args):
             for i in range(bam.nreferences)])
 
         with BEDFile(args.repeat_regions) as h:
-            #for region in h:
-            for region in islice(h, 0, 10000):
+            for region in h:
                 contig_id = contigs.get(region.contig)
                 if contig_id is not None:
                     index.add(contig_id, region.start, region.end)
@@ -54,11 +51,14 @@ def main(args):
                 file=sys.stderr)
 
         n_alns = n_reads = alns_removed = reads_removed = 0
-        prev_name = None
+        #prev_name = None
 
         for name, alns in groupby(bam, attrgetter("qname")):
-            if (prev_name is not None) and (prev_name > name):
-                raise Exception("Input is not sorted by read name! Exiting.")
+            # FIXME: samtools apparently uses something else besides simple lex sort
+            # with the -n function...
+            #if (prev_name is not None) and (prev_name > name):
+            #    raise Exception("Input is not sorted by read name! Exiting.")
+
             alns = list(alns)
             n_reads += 1
             removed = 0
@@ -86,7 +86,7 @@ def main(args):
             if removed == len(alns):
                 reads_removed += 1
             alns_removed += removed
-            prev_name = name
+            #prev_name = name
         
         print("%s / %s alignments removed." % (alns_removed, n_alns),
                 file=sys.stderr)
