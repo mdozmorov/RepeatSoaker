@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import sys
 from itertools import groupby
 from operator import attrgetter
 
@@ -14,6 +15,11 @@ if __name__ == "__main__":
             help="A BED file with repetitive regions to be masked.")
     parser.add_argument("--genome", "-g",
             help="A UCSC genome name (e.g., 'hg19')")
+
+    parser.add_argument("--percent-overlap", "-p",
+            type=float,
+            default=85,
+            help="Alignments that overlap with repetitive regions at this percentage or greater will be filtered out.")
     parser.add_argument("bam_file", nargs=1)
 
     args = parser.parse_args()
@@ -28,28 +34,38 @@ if __name__ == "__main__":
 
         with BEDFile(args.repeat_regions) as h:
             for region in islice(h, 0, 100):
+            #for region in h:
                 contig_id = contigs.get(region.contig)
                 if contig_id is not None:
                     index.add(contig_id, region.start, region.end)
         index.build()
 
-        for name, alns in groupby(bam, attrgetter("qname")):
-            for aln in alns:
-                matches = index.search(aln.tid, aln.pos, aln.aend)
-                if matches:
-                    print(matches)
-                    # TODO: take cumulative overlap instead of max
-                    n_overlap = max([aln.overlap(s,e) for (s,e,_) in matches])
-                    pct_overlap = n_overlap / (aln.aend - aln.pos)
-                    print(n_overlap, pct_overlap)
+        print("Repetitive region index loaded.",
+                file=sys.stderr)
 
-        """
-        for tid, alns in itertools.groupby(attrgetter("tid"), bam):
-            for (start, end), alns in itertools.groupby(
-                    lambda aln: (aln.pos, aln.aend), alns):
-        """
-            #print(aln.positions)
-            #print(aln.rname)
-            #print(aln.pnext)
-            #print(dir(aln))
-            #break
+        n_alns = n_reads = alns_removed = reads_removed = 0
+
+        for name, alns in groupby(bam, attrgetter("qname")):
+            alns = list(alns)
+            n_reads += 1
+            removed = 0
+
+            for aln in alns:
+                n_alns += 1
+                matches = list(index.search(aln.tid, aln.pos, aln.aend))
+                if matches:
+                    # TODO: take cumulative overlap instead of max
+                    n_overlap = max([aln.overlap(s,e) 
+                        for (_,s,e,_) in matches])
+                    pct_overlap = n_overlap / (aln.aend - aln.pos)
+                    if (pct_overlap * 100) > args.percent_overlap:
+                        removed += 1
+
+            if removed == len(alns):
+                reads_removed += 1
+            alns_removed += removed
+        
+        print("%s / %s alignments removed." % (alns_removed, n_alns),
+                file=sys.stderr)
+        print("%s / %s reads removed." % (reads_removed, n_reads),
+                file=sys.stderr)
