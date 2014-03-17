@@ -27,8 +27,15 @@ Then, install RepeatSoaker, which uses the pysam module.
 Usage
 =====
 
-Obtain organism-specific genomic coordinates of low-complexity regions in .BED format. Hint: Use the UCSC genome browser database (TODO: automate)
+Obtain organism-specific genomic coordinates of low-complexity regions in .BED format. 
 
+.. code-block:: bash
+
+    make rmsk
+	make clean
+
+This will generate the *rmsk.hg19.bed* and *rmsk.mm9.bed* files. (TODO: better automation)
+	
 Run RepeatSoaker.py directly on a **name sorted** BAM file.
 
 .. code-block:: bash
