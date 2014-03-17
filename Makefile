@@ -1,4 +1,4 @@
-rmsk:			rmsk.mm9.bed#rmsk.hg19.bed
+rmsk:			rmsk.hg19.bed rmsk.mm9.bed
 
 rmsk.hg19.bed:
 				wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/rmsk.txt.gz
@@ -28,5 +28,17 @@ rmsk.mm9.bed:
 				wget http://hgdownload.cse.ucsc.edu/goldenPath/mm9/database/chrY_rmsk.txt.gz
 				for file in chr*rmsk.txt.gz; do zcat $$file | awk 'BEGIN {OFS="\t"} {print $$6,$$7,$$8,$$11,".",$$10}' >> rmsk.mm9.bed; done
 				sort -k1,1 -k2,2n -o rmsk.mm9.bed rmsk.mm9.bed
+rmsk.test:
+				# https://gist.github.com/gilesc/9607495
+				# Need ftp command
+				cat <<EOF | ftp
+				open hgdownload.cse.ucsc.edu
+				anonymous
+				mail@your-mail.com
+				cd goldenPath/mm9/database
+				prompt
+				mget chr*rmsk.txt.gz
+				bye
+				EOF
 clean:
 				rm *.txt.gz
