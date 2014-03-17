@@ -1,3 +1,9 @@
+*.gz
+*.o*
+*.po*
+*.fasta
+
+
 *.py[cod]
 /data
 *.bam
