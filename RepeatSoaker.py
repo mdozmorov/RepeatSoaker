@@ -37,14 +37,12 @@ def main(args):
 
     with pysam.Samfile(args.bam_file[0], "rb") as bam, \
             pysam.Samfile("-", out_mode, template=bam) as out:
-        contigs = dict([(bam.getrname(i), i) 
+        contigs = dict([(i, bam.getrname(i)) 
             for i in range(bam.nreferences)])
 
         with BEDFile(args.repeat_regions) as h:
             for region in h:
-                contig_id = contigs.get(region.contig)
-                if contig_id is not None:
-                    index.add(contig_id, region.start, region.end)
+                index.add(region)
         index.build()
 
         print("Repetitive region index loaded.",
@@ -65,12 +63,13 @@ def main(args):
 
             for aln in alns:
                 n_alns += 1
-                matches = list(index.search(aln.tid, aln.pos, aln.aend))
+                matches = list(index.search(contigs[aln.tid], aln.pos, aln.aend))
                 ok = True
                 if matches:
                     positions = set(range(aln.pos, aln.aend)) 
                     for m in matches:
-                        _, m_s, m_e, _ = m
+                        m_s = m.start
+                        m_e = m.end
                         positions = set([p for p in positions
                             if not ((p >= m_s) and (p <= m_e))])
 
