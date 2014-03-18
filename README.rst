@@ -32,7 +32,7 @@ Obtain organism-specific genomic coordinates of low-complexity regions in .BED f
 .. code-block:: bash
 
     make rmsk
-	make clean
+    make clean
 
 This will generate the *rmsk.hg19.bed* and *rmsk.mm9.bed* files. (TODO: better automation)
 	
@@ -42,12 +42,12 @@ Run RepeatSoaker.py directly on a **name sorted** BAM file.
 
    sudo pip3 install pysam
    git clone https://github.com/mdozmorov/RepeatSoaker.git
-   (optional: sort a file by name) samtools sort -n <in.bam> <out.prefix>
-   cat <in.namesorted.bam> | python3 /path/to/RepeatSoaker.py - -r <lowcomplexity.bed> -p <%overlap> > <out.filtered.bam>
+   samtools sort -n <in.bam> <in.namesorted> OR picard-tools SortSam INPUT=<in.bam> OUTPUT=<in.namesorted.bam> SORT_ORDER=queryname
+   python3 /path/to/RepeatSoaker.py <in.namesorted.bam> -r <lowcomplexity.bed> -p <%overlap> > <out.filtered.bam>
 
-Example: cat experiment1.bam | python3 RepeatSoaker.py - -r rmsk.hg19.bed -p 85 > experiment1.f.bam
+Example: python3 RepeatSoaker.py test.bam -r rmsk.hg19.bed -p 85 > test.namesorted.bam
 
-This will use *rmsk.hg19.bed* file to obtain genomic coordinates of low complexity regions identified by RepeatMasker and filter *experiment1.bam* alignments/whole reads [#] overlapping with low complexity regions >85%. The results are outputted into *experiment1.f.bam* file.
+This will use *rmsk.hg19.bed* file to obtain genomic coordinates of low complexity regions identified by RepeatMasker and filter *test.bam* alignments/whole reads [#] overlapping with low complexity regions >85%. The results are outputted into *test.namesorted.bam* file.
 
 Changelog
 =========
