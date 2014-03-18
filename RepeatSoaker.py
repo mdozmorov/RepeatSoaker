@@ -86,12 +86,13 @@ def main(args):
                 reads_removed += 1
             alns_removed += removed
             #prev_name = name
-        
+            if n_reads % 1000 == 0:
+                print("%s alignments processed." % n_reads, file=sys.stderr)
+
         print("%s / %s alignments removed." % (alns_removed, n_alns),
                 file=sys.stderr)
         print("%s / %s reads removed." % (reads_removed, n_reads),
                 file=sys.stderr)
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
