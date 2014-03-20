@@ -1,2 +1,3 @@
 pysam
-BioTK==0.0.1
+#BioTK==0.0.1
+BioTK
