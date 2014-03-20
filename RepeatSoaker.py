@@ -10,21 +10,19 @@ from BioTK.genome import RAMIndex
 import pysam
 
 def main(args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--repeat-regions", "-r",
-            help="A BED file with repetitive regions to be masked.")
+    parser = argparse.ArgumentParser(description='Post-processing of NGS data by filtering out alignments overlapping low complexity regions', usage='%(prog)s bam_file -r rmsk.bed [-p 85] [-s] > filtered_bam_file')
+    parser.add_argument("bam_file", nargs=1, help="Input file in BAM format.")
+    parser.add_argument("-r", "--repeat-regions", required=True, metavar="rmsk.bed",
+            help="A BED file with genomic coordinates of repetitive regions.")
+    parser.add_argument("-p", "--percent-overlap", metavar="85",
+            type=float,
+            default=85,
+            help="Alignments that overlap with repetitive regions at this percentage or greater will be filtered out.Default - 85.")
+    parser.add_argument("-s", "--output-sam", metavar="", help="Output in SAM format, otherwise, in BAM (default).")
 
     # TODO: not implemented
     #parser.add_argument("--genome", "-g",
     #        help="A UCSC genome name (e.g., 'hg19')")
-
-    parser.add_argument("--output-sam", "-S")
-
-    parser.add_argument("--percent-overlap", "-p",
-            type=float,
-            default=85,
-            help="Alignments that overlap with repetitive regions at this percentage or greater will be filtered out.")
-    parser.add_argument("bam_file", nargs=1)
 
     args = parser.parse_args(args)
 
@@ -86,12 +84,14 @@ def main(args):
                 reads_removed += 1
             alns_removed += removed
             #prev_name = name
-        
+            if n_reads % 1000 == 0:
+                print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", end="\r", file=sys.stderr)
+                print("%d alignments processed." % n_reads, end="\r", file=sys.stderr)
+
         print("%s / %s alignments removed." % (alns_removed, n_alns),
                 file=sys.stderr)
         print("%s / %s reads removed." % (reads_removed, n_reads),
                 file=sys.stderr)
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])

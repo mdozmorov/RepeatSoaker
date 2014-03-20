@@ -1,7 +1,7 @@
 setup(
     name="RepeatSoaker",
     author="Mikhail Dozmorov, Cory Giles",
-    author_email="dozmorovm@omrf.org",
+    author_email="mikhail.dozmorov@gmail.com",
     description="Post-process high-throughput sequencing alignments by removing reads falling in repetitive regions.",
     classifiers=[
         "Development Status :: 3 - Alpha",
