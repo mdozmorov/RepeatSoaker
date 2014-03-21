@@ -70,8 +70,8 @@ def main(args):
                         positions[p] = False
 
                     aln_len = (aln.aend - aln.pos)
-                    positions = {x: positions[x] for x in positions if x}
-                    pct_overlap = aln_len - len(positions) / aln_len
+                    num_positions = sum(positions.values())
+                    pct_overlap = aln_len - num_positions / aln_len
                     if (pct_overlap * 100) > args.percent_overlap:
                         removed += 1
                         ok = False
