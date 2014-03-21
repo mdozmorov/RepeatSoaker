@@ -28,6 +28,7 @@ def main(args):
 
     assert (args.percent_overlap >= 0) and (args.percent_overlap <= 100), \
            "--percent-overlap (-p) must be between 0 and 100."
+    args.percent_overlap /= 100 #precompute this instead of * 100 in each loop iter
 
     index = RAMIndex()
 
@@ -64,17 +65,15 @@ def main(args):
                 matches = list(index.search(contigs[aln.tid], aln.pos, aln.aend))
                 ok = True
                 if matches:
-                    positions = set(range(aln.pos, aln.aend)) 
+                    positions = dict.fromkeys(set(range(aln.pos, aln.aend)),True)
                     for m in matches:
-                        m_s = m.start
-                        m_e = m.end
-                        positions = set([p for p in positions
-                            if not ((p >= m_s) and (p <= m_e))])
+                      for p in range(m.start,m.end):
+                        positions[p] = False
 
                     aln_len = (aln.aend - aln.pos)
-                    n_overlap = aln_len - len(positions)
-                    pct_overlap = n_overlap / aln_len
-                    if (pct_overlap * 100) > args.percent_overlap:
+                    num_positions = sum(positions.values())
+                    pct_overlap = aln_len - num_positions / aln_len
+                    if (pct_overlap) > args.percent_overlap:
                         removed += 1
                         ok = False
                 if ok:

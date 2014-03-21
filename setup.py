@@ -1,3 +1,9 @@
+import sys
+import os
+import pkgutil
+
+from setuptools import setup, find_packages
+
 setup(
     name="RepeatSoaker",
     author="Mikhail Dozmorov, Cory Giles",
