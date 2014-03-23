@@ -37,6 +37,9 @@ input_bam="$1"
 }
 [[ -z "$repeat_regions" ]] && usage && exit 1
 
+((command -v bedtools >/dev/null) || echo "bedtools not found in \$PATH" && exit 1)
+((command -v samtools >/dev/null) || echo "samtools not found in \$PATH" && exit 1)
+
 # Filters out (-v) coordinate-sorted BAM file overlapping $repeat_regions file
 # at least $percent_overlap (-f). Output into $output_bam BAM file
 bedtools intersect -sorted -v -f $percent_overlap -abam "$input_bam" -b "$repeat_regions" > "$output_bam"
