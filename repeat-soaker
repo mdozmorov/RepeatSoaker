@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 usage() {
     cat <<EOF
 USAGE: repeat-soaker <options> -r repeat_regions.bed in.bam
