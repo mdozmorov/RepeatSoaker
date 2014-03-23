@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+set -o pipefail
+
 usage() {
     cat <<EOF
 USAGE: repeat-soaker <options> -r repeat_regions.bed in.bam
@@ -34,6 +37,9 @@ input_bam="$1"
     output_bam=$(dirname $input_bam)/$(basename $input_bam .bam).repeatSoaker.bam
 }
 [[ -z "$repeat_regions" ]] && usage && exit 1
+
+((command -v bedtools >/dev/null) || echo "bedtools not found in \$PATH" && exit 1)
+((command -v samtools >/dev/null) || echo "samtools not found in \$PATH" && exit 1)
 
 # Filters out (-v) coordinate-sorted BAM file overlapping $repeat_regions file
 # at least $percent_overlap (-f). Output into $output_bam BAM file
