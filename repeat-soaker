@@ -12,11 +12,11 @@ Options:
          default: in.repeatSoaker.bam
     -h : show this help
     -p : percent overlap (a float between 0 and 1)
-         default: 0.85
+         default: 0.75
 EOF
 }
 
-percent_overlap=0.85
+percent_overlap=0.75
 repeat_regions=
 
 while getopts shr:p:o: opt; do

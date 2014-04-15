@@ -1,48 +1,60 @@
-RepeatSoaker: a simple method to eliminate low-complexity short reads
-======================================================================
+RepeatSoaker: clean NGS data by filtering out reads overlapping low-complexity regions
+==========================================================================================
 
-RepeatSoaker removes alignments overlapping low-complexity (repeat) regions from aligned sequencing data.
+RepeatSoaker removes reads overlapping low-complexity (repeat) regions from aligned sequencing data. Although RepeatSoaker removes ~3% of the reads, it helps to emphasize the biological signals within the data (manuscript submitted), reflected by more significant p-values of gene ontology and pathway enrichment analyses (for RNA-seq data), and motif enrichment analyses (for ChIP-seq data).
 
-Installation
-=============
+Input
+------
 
-RepeatSoaker is a command line sctipt utilizing `bedtools <https://github.com/arq5x/bedtools2>`_ functionality. Install it from Github
+- A **coordinate sorted** .bam file, obtainable  with
 
 .. code-block:: bash
 
-   git clone https://github.com/mdozmorov/RepeatSoaker.git
+    samtools sort <in.bam> <in.coordsorted>
+    picard-tools SortSam INPUT=<in.bam> OUTPUT=<in.coordsorted.bam> SORT_ORDER=coordinate
 
-The ``repeat-soaker`` script may be executed directly.
+Output
+--------
 
-Usage
-=====
+- A .bam file with reads overlapping low complexity regions at a given threshold filtered out
 
-Obtain organism-specific genomic coordinates of low-complexity regions in .BED format. 
+Installation
+============
+
+1. Install `bedtools <https://github.com/arq5x/bedtools2>`_.
+
+2. Clone `RepeatSoaker  <https://github.com/mdozmorov/RepeatSoaker>`_
+in your program folder.
+
+.. code-block:: bash
+
+    git clone https://github.com/mdozmorov/RepeatSoaker.git
+
+3. Run 
 
 .. code-block:: bash
 
     make rmsk
     make clean
 
-This will generate the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files. (TODO: better automation)
-	
-Run ``repeat-soaker`` directly on a **coordinate sorted** BAM file.
+to generate (once) the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files containing genomic coordinates of low complexity regions, as defined by the `RepeatMasker  <http://www.repeatmasker.org/>`_
+program.
+
+Usage
+======
+
+Run ``repeat-soaker`` script directly
 
 .. code-block:: bash
 
-    samtools sort <in.bam> <in.coordsorted> OR picard-tools SortSam INPUT=<in.bam> OUTPUT=<in.coordsorted.bam> SORT_ORDER=coordinate
-    ./repeat-soaker -r <rmsk.bed> -p 0.85 -o <out.soaked.bam> <in.coordsorted.bam>
+    ./repeat-soaker -r <rmsk.bed> -o <out.soaked.bam> <in.coordsorted.bam>
 
-Example: ./repeat-soaker -r rmsk.hg19.bed -p 0.85 -o test.soaked.bam test.bam
+Tips
+----
 
-This will use ``rmsk.hg19.bed`` file to obtain genomic coordinates of low complexity regions identified by RepeatMasker and filter ``test.bam`` alignments/whole reads [#] overlapping with low complexity regions >85%. The results are outputted into ``test.soaked.bam`` file.
+Using more rigorous filtering threshold helps to improve the significance of the biological signals. Use ``-p 0`` flag to test it.
 
-Changelog
-=========
+Support
+========
 
-- 03-21-2014: Bedtools implementation of RepeatSoaker, ``bedtools`` branch
-- 03-19-2014: Branches merged, alpha status
-- 03-14-2014: Branch python now contains implementation of RepeatSoaker through masking algorithm
-- 03-12-2014: RepeatSoaker repo is online
-
-.. [#] A read can have multiple alignments in the genome. RepeatMasker treats each alignment separately, and removes only those satisfying overlap with low complexity regions percentage. If all read-specific alignments overlap with low complecity regions, the whole read is removed.
+Contact Mikhail Dozmorov at first_name.last_name@gmail.com.
