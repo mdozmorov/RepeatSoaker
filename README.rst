@@ -1,60 +1,60 @@
-RepeatSoaker: a simple method to eliminate low-complexity short reads
-======================================================================
+RepeatSoaker: clean NGS data by filtering out reads overlapping low-complexity regions
+==========================================================================================
 
-RepeatSoaker removes alignments overlapping low-complexity (repeat) regions from aligned sequencing data.
+RepeatSoaker removes reads overlapping low-complexity (repeat) regions from aligned sequencing data. Although RepeatSoaker removes ~3% of the reads, it helps to emphasize the biological signals within the data (manuscript submitted), reflected by more significant p-values of gene ontology and pathway enrichment analyses (for RNA-seq data), and motif enrichment analyses (for ChIP-seq data).
+
+Input
+------
+
+- A **coordinate sorted** .bam file, obtainable  with
+
+.. code-block:: bash
+
+    samtools sort <in.bam> <in.coordsorted>
+    picard-tools SortSam INPUT=<in.bam> OUTPUT=<in.coordsorted.bam> SORT_ORDER=coordinate
+
+Output
+--------
+
+- A .bam file with reads overlapping low complexity regions at a given threshold filtered out
 
 Installation
-=============
+============
 
-RepeatSoaker is written in Python3 and is dependent on `BioTK <https://github.com/gilesc/BioTK>`_ functionality. First, ensure you have ``python3`` installed, then install BioTK:
+1. Install `bedtools <https://github.com/arq5x/bedtools2>`_.
 
-.. code-block:: bash
-
-    git clone https://github.com/gilesc/BioTK.git
-    sudo apt-get install pkg-config python3-pandas python3-numpy python3-scipy libhdf5-dev mdbtools-dev
-    pip3 install patsy
-    pip3 install -r requirements.txt
-    python3 setup.py install --user 
-
-Then, install RepeatSoaker, which uses the pysam module.
+2. Clone `RepeatSoaker  <https://github.com/mdozmorov/RepeatSoaker>`_
+in your program folder.
 
 .. code-block:: bash
 
-   sudo pip3 install pysam
-   git clone https://github.com/mdozmorov/RepeatSoaker.git
+    git clone https://github.com/mdozmorov/RepeatSoaker.git
 
-The ``RepeatSoaker.py`` script may be executed directly, or installed via ``setup.py``.
-
-Usage
-=====
-
-Obtain organism-specific genomic coordinates of low-complexity regions in .BED format. 
+3. Run 
 
 .. code-block:: bash
 
     make rmsk
     make clean
 
-This will generate the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files. (TODO: better automation)
-	
-Run RepeatSoaker.py directly on a **name sorted** BAM file.
+to generate (once) the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files containing genomic coordinates of low complexity regions, as defined by the `RepeatMasker  <http://www.repeatmasker.org/>`_
+program.
+
+Usage
+======
+
+Run ``repeat-soaker`` script directly
 
 .. code-block:: bash
 
-    sudo pip3 install pysam
-    git clone https://github.com/mdozmorov/RepeatSoaker.git
-    samtools sort -n <in.bam> <in.namesorted> OR picard-tools SortSam INPUT=<in.bam> OUTPUT=<in.namesorted.bam> SORT_ORDER=queryname
-    python3 /path/to/RepeatSoaker.py <in.namesorted.bam> -r <lowcomplexity.bed> -p <%overlap> > <out.filtered.bam>
+    ./repeat-soaker -r <rmsk.bed> -o <out.soaked.bam> <in.coordsorted.bam>
 
-Example: python3 RepeatSoaker.py test.bam -r rmsk.hg19.bed -p 85 > test.filtered.bam
+Tips
+----
 
-This will use ``rmsk.hg19.bed`` file to obtain genomic coordinates of low complexity regions identified by RepeatMasker and filter ``test.bam`` alignments/whole reads [#] overlapping with low complexity regions >85%. The results are outputted into ``test.filtered.bam`` file.
+Using more rigorous filtering threshold helps to improve the significance of the biological signals. Use ``-p 0`` flag to test it.
 
-Changelog
-=========
+Support
+========
 
-- 03-19-2014: Branches merged, alpha status
-- 03-14-2014: Branch python now contains implementation of RepeatSoaker through masking algorithm
-- 03-12-2014: RepeatSoaker repo is online
-
-.. [#] A read can have multiple alignments in the genome. RepeatMasker treats each alignment separately, and removes only those satisfying overlap with low complexity regions percentage. If all read-specific alignments overlap with low complecity regions, the whole read is removed.
+Contact Mikhail Dozmorov at first_name.last_name@gmail.com.

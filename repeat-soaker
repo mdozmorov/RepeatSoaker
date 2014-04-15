@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+usage() {
+    cat <<EOF
+USAGE: repeat-soaker <options> -r repeat_regions.bed in.bam
+
+Options:
+    -o <out.bam> : specify an output path for the bam
+         default: in.repeatSoaker.bam
+    -h : show this help
+    -p : percent overlap (a float between 0 and 1)
+         default: 0.75
+EOF
+}
+
+percent_overlap=0.75
+repeat_regions=
+
+while getopts shr:p:o: opt; do
+    case $opt in
+        r) repeat_regions="$OPTARG" ;;
+        p) percent_overlap="$OPTARG" ;;
+        o) output_bam="$OPTARG" ;;
+        h) usage && exit 0 ;;
+        *) usage && exit 1 ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+input_bam="$1"
+
+[[ -z "$input_bam" ]] && usage && exit 1
+[[ -z "$output_bam" ]] && {
+    output_bam=$(dirname $input_bam)/$(basename $input_bam .bam).repeatSoaker.bam
+}
+[[ -z "$repeat_regions" ]] && usage && exit 1
+
+((command -v bedtools >/dev/null) || (echo "bedtools not found in \$PATH" ; exit 1))
+((command -v samtools >/dev/null) || (echo "samtools not found in \$PATH" ; exit 1))
+
+# Filters out (-v) coordinate-sorted BAM file overlapping $repeat_regions file
+# at least $percent_overlap (-f). Output into $output_bam BAM file
+bedtools intersect -sorted -v -f $percent_overlap -abam "$input_bam" -b "$repeat_regions" > "$output_bam"
+
+reads_prefilter="$(samtools flagstat "$input_bam" | awk 'NR == 1 {print $1 + $3}')"
+reads_postfilter="$(samtools flagstat "$output_bam" | awk 'NR == 1 {print $1 + $3}')"
+pct_removed=$(perl -e "print 1.0 * ($reads_prefilter - $reads_postfilter) / $reads_prefilter")
+echo -e "File\tReads pre-filter\tReads post-filter\tProportion removed"
+echo -e "$input_bam\t$reads_prefilter\t$reads_postfilter\t$pct_removed"
