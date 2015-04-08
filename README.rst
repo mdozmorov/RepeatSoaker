@@ -34,11 +34,11 @@ in your program folder.
 
 .. code-block:: bash
 
-    make rmsk
+    make mappability
     make clean
 
-to generate (once) the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files containing genomic coordinates of low complexity regions, as defined by the `RepeatMasker  <http://www.repeatmasker.org/>`_
-program.
+to generate (once) the ``DukeMappability.hg19.bed`` and ``DacMappability.hg19.bed`` files containing genomic coordinates of blacklisted regions that should be avoided due to mappability issues (generated using ``make mappability``). Other tracks that may be used with RepeatSoaker include the ``rmsk.hg19.bed`` and ``rmsk.mm9.bed`` files containing genomic coordinates of low complexity regions, as defined by the `RepeatMasker  <http://www.repeatmasker.org/>`_
+program (generated with ``make rmsk`` command). Other options include using Retroposed Genes V5, Including Pseudogenes track (``ucscRetroAli5.hg19.bed`` file, generated using ``make retrogenes``), Database of Genomic Variants: Structural Variation (CNV, Inversion, In/del) (``dgvMerged.hg19.bed`` file, generated using ``make dgv``), and Segmental Dups - Duplications of >1000 Bases of Non-RepeatMasked Sequence (``genomicSuperDups.hg19.bed`` file, generated using ``make superdups``).
 
 Usage
 ======
